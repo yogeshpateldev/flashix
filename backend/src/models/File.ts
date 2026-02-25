@@ -17,14 +17,14 @@ const fileSchema = new Schema<IFile>({
   },
   sessionId: {
     type: String,
-    required: function(this: IFile) {
+    required: function (this: IFile) {
       return this.ownerType === 'anonymous';
     },
   },
   userId: {
     type: Schema.Types.ObjectId,
     ref: 'User',
-    required: function(this: IFile) {
+    required: function (this: IFile) {
       return this.ownerType === 'user';
     },
   },
@@ -48,7 +48,7 @@ const fileSchema = new Schema<IFile>({
   },
   passwordHash: {
     type: String,
-    required: function(this: IFile) {
+    required: function (this: IFile) {
       return this.visibility === 'password';
     },
     select: false,
@@ -92,7 +92,7 @@ const fileSchema = new Schema<IFile>({
 }, {
   timestamps: true,
   toJSON: {
-    transform: function(doc: any, ret: any) {
+    transform: function (doc: any, ret: any) {
       if (ret.passwordHash) delete ret.passwordHash;
       if (ret.cloudinaryPublicId) delete ret.cloudinaryPublicId;
       return ret;
@@ -100,13 +100,13 @@ const fileSchema = new Schema<IFile>({
   },
 });
 
-fileSchema.index({ fileId: 1 });
+// No explicit index needed — fileId already indexed via unique: true
 fileSchema.index({ sessionId: 1 });
 fileSchema.index({ userId: 1 });
-fileSchema.index({ expiresAt: 1 });
-fileSchema.index({ ownerType: 1, createdAt: -1 });
+fileSchema.index({ expiresAt: 1 }); // used for expiry queries
+fileSchema.index({ ownerType: 1, createdAt: -1 }); // compound index for listing
 
-fileSchema.pre('save', async function(next) {
+fileSchema.pre('save', async function (next) {
   if (this.isModified('passwordHash') && this.passwordHash) {
     try {
       const salt = await bcrypt.genSalt(12);
@@ -120,18 +120,18 @@ fileSchema.pre('save', async function(next) {
   }
 });
 
-fileSchema.methods.isExpired = function(): boolean {
+fileSchema.methods.isExpired = function (): boolean {
   return new Date() > this.expiresAt;
 };
 
-fileSchema.methods.canDownload = function(): boolean {
+fileSchema.methods.canDownload = function (): boolean {
   if (this.isExpired()) return false;
   if (this.maxDownloads && this.downloadCount >= this.maxDownloads) return false;
   if (this.meta.virusScanStatus === 'infected') return false;
   return true;
 };
 
-fileSchema.methods.incrementDownload = async function(): Promise<void> {
+fileSchema.methods.incrementDownload = async function (): Promise<void> {
   this.downloadCount += 1;
   await this.save();
 };

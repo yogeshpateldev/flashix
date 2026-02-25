@@ -31,11 +31,11 @@ const sessionSchema = new Schema<ISession>({
   timestamps: true,
 });
 
-sessionSchema.index({ sessionId: 1 });
+// No explicit index needed — sessionId already indexed via unique: true
 sessionSchema.index({ userId: 1 });
-sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+sessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 }); // TTL index auto-deletes expired sessions
 
-sessionSchema.methods.isExpired = function(): boolean {
+sessionSchema.methods.isExpired = function (): boolean {
   return new Date() > this.expiresAt;
 };
 

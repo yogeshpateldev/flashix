@@ -28,7 +28,7 @@ const userSchema = new Schema<IUser>({
 }, {
   timestamps: true,
   toJSON: {
-    transform: function(doc: any, ret: any) {
+    transform: function (doc: any, ret: any) {
       if (ret.password) delete ret.password;
       if (ret.refreshTokens) delete ret.refreshTokens;
       return ret;
@@ -36,11 +36,11 @@ const userSchema = new Schema<IUser>({
   },
 });
 
-userSchema.index({ email: 1 });
+// No explicit index needed — email already indexed via unique: true
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
@@ -50,7 +50,7 @@ userSchema.pre('save', async function(next) {
   }
 });
 
-userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
+userSchema.methods.comparePassword = async function (candidatePassword: string): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
