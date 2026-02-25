@@ -8,7 +8,7 @@ class DatabaseConnection {
   private mongoConnection: typeof mongoose | null = null;
   private redisClient: ReturnType<typeof createClient> | null = null;
 
-  private constructor() {}
+  private constructor() { }
 
   public static getInstance(): DatabaseConnection {
     if (!DatabaseConnection.instance) {
@@ -25,13 +25,13 @@ class DatabaseConnection {
     try {
       this.mongoConnection = await mongoose.connect(config.database.mongo.uri, {
         maxPoolSize: 10,
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 10000, // 10s for Render cold starts
         socketTimeoutMS: 45000,
         bufferCommands: false,
       });
 
       logger.info('MongoDB connected successfully');
-      
+
       mongoose.connection.on('error', (error) => {
         logger.error('MongoDB connection error:', error);
       });
@@ -79,8 +79,10 @@ class DatabaseConnection {
       await this.redisClient.connect();
       return this.redisClient;
     } catch (error) {
-      logger.error('Redis connection failed:', error);
-      throw error;
+      logger.error('Redis connection failed (non-fatal, continuing without Redis):', error);
+      // Redis is used for caching/rate-limiting only — app can run without it
+      this.redisClient = null;
+      return null as any;
     }
   }
 
