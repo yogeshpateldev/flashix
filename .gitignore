@@ -1,0 +1,84 @@
+# ========================
+# Environment Variables
+# ========================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+**/.env
+**/.env.local
+**/.env.development
+**/.env.production
+**/.env.test
+
+# ========================
+# Dependencies
+# ========================
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+
+# ========================
+# Build Output
+# ========================
+dist/
+dist-ssr/
+build/
+out/
+**/dist/
+**/build/
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun.lockb
+
+# ========================
+# Testing & Coverage
+# ========================
+coverage/
+.nyc_output/
+*.lcov
+
+# ========================
+# TypeScript
+# ========================
+*.tsbuildinfo
+
+# ========================
+# Vite
+# ========================
+.vite/
+
+# ========================
+# OS & Editor Files
+# ========================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Misc
+# ========================
+.cache/
+tmp/
+temp/
