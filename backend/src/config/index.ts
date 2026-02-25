@@ -1,5 +1,5 @@
-import dotenv from 'dotenv';
-import Joi from 'joi';
+import * as dotenv from 'dotenv';
+import * as Joi from 'joi';
 
 dotenv.config();
 
@@ -100,6 +100,7 @@ export const config = {
   security: {
     bcryptRounds: envVars.BCRYPT_ROUNDS,
     sessionSecret: envVars.SESSION_SECRET,
+    trustProxy: envVars.TRUST_PROXY,
   },
 
   rateLimit: {

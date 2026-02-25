@@ -1,6 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
+import multer from 'multer';
+type MulterFile = Express.Multer.File;
 import QRCode from 'qrcode';
 import { File, User, Session, AuditLog } from '../models';
 import { AuthenticatedRequest, IFile } from '../types';
@@ -17,7 +19,7 @@ cloudinary.config({
 
 export class FileService {
   static async uploadFile(
-    file: Express.Multer.File,
+    file: MulterFile,
     options: {
       visibility?: 'public' | 'private' | 'password';
       password?: string;
@@ -240,11 +242,11 @@ export class FileService {
   }
 
   static async generateQRCode(fileId: string): Promise<string> {
-    const baseUrl = config.env === 'production' 
-      ? 'https://your-domain.com' 
+    const baseUrl = config.env === 'production'
+      ? 'https://your-domain.com'
       : 'http://localhost:3000';
     const url = `${baseUrl}/f/${fileId}`;
-    
+
     return QRCode.toDataURL(url);
   }
 
@@ -273,7 +275,7 @@ export class FileService {
     });
   }
 
-  private static validateFile(file: Express.Multer.File): void {
+  private static validateFile(file: MulterFile): void {
     if (!file) {
       throw createError('No file provided', 400);
     }
@@ -287,7 +289,7 @@ export class FileService {
     }
   }
 
-  private static async simulateVirusScan(file: Express.Multer.File): Promise<void> {
+  private static async simulateVirusScan(file: MulterFile): Promise<void> {
     // Simulate virus scan delay
     await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -300,7 +302,7 @@ export class FileService {
     logger.debug('Virus scan completed', { filename: file.originalname, size: file.size });
   }
 
-  private static async uploadToCloudinary(file: Express.Multer.File, visibility?: string): Promise<any> {
+  private static async uploadToCloudinary(file: MulterFile, visibility?: string): Promise<any> {
     const uploadOptions: any = {
       resource_type: 'auto',
       folder: 'drop24',
@@ -373,7 +375,7 @@ export class FileService {
 
     // Build query for public files
     let query: any = { visibility: 'public' };
-    
+
     if (search) {
       query.originalName = { $regex: search, $options: 'i' };
     }
@@ -404,7 +406,7 @@ export class FileService {
     ]);
 
     return {
-      files,
+      files: files as unknown as IFile[],
       pagination: {
         page,
         limit,

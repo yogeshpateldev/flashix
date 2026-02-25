@@ -84,10 +84,11 @@ export interface AuthenticatedRequest extends Request {
   user?: IUser;
   session?: ISession;
   requestId: string;
+  file?: Express.Multer.File;
+  files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
 }
 
 export interface FileUploadRequest {
-  file: Express.Multer.File;
   visibility?: 'public' | 'private' | 'password';
   password?: string;
   maxDownloads?: number;
@@ -124,8 +125,8 @@ export interface JwtPayload {
   email: string;
   role: string;
   type: 'access' | 'refresh';
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 }
 
 export interface RedisCacheData {

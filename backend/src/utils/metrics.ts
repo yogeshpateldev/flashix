@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import client from 'prom-client';
+import * as client from 'prom-client';
 import logger from '../utils/logger';
 
 // Create a Registry to register the metrics
@@ -90,7 +90,7 @@ register.registerMetric(cacheOperations);
 // Middleware to track HTTP requests
 export const metricsMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   const start = Date.now();
-  
+
   // Increment active connections
   activeConnections.inc();
 
@@ -102,7 +102,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
 
     // Record request duration
     httpRequestDuration.observe({ method, route, status_code: statusCode }, duration);
-    
+
     // Record request total
     httpRequestTotal.inc({ method, route, status_code: statusCode });
 

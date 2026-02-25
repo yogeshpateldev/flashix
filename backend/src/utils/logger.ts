@@ -1,4 +1,4 @@
-import winston from 'winston';
+import * as winston from 'winston';
 import config from '../config';
 
 const logFormat = winston.format.combine(
@@ -13,13 +13,13 @@ const logger = winston.createLogger({
   format: logFormat,
   defaultMeta: { service: 'flashix-backend' },
   transports: [
-    new winston.transports.File({ 
-      filename: 'logs/error.log', 
+    new winston.transports.File({
+      filename: 'logs/error.log',
       level: 'error',
       maxsize: 5242880, // 5MB
       maxFiles: 5,
     }),
-    new winston.transports.File({ 
+    new winston.transports.File({
       filename: 'logs/combined.log',
       maxsize: 5242880, // 5MB
       maxFiles: 5,
