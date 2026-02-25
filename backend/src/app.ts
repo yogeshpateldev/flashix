@@ -8,14 +8,6 @@ import xss from 'xss-clean';
 import hpp from 'hpp';
 import { v4 as uuidv4 } from 'uuid';
 
-// Augment Express Request to include requestId
-declare global {
-  namespace Express {
-    interface Request {
-      requestId: string;
-    }
-  }
-}
 
 import config from './config';
 import logger from './utils/logger';

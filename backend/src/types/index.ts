@@ -85,7 +85,7 @@ export interface AuthenticatedRequest extends Request {
   session?: ISession;
   requestId: string;
   file?: Express.Multer.File;
-  files?: Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] };
+  files?: { [fieldname: string]: Express.Multer.File[] } | Express.Multer.File[];
 }
 
 export interface FileUploadRequest {
