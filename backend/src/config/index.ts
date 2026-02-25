@@ -1,7 +1,8 @@
 import * as dotenv from 'dotenv';
 import * as Joi from 'joi';
 
-dotenv.config();
+// Load .env in development only — Render sets env vars via dashboard
+dotenv.config({ override: false });
 
 const envSchema = Joi.object({
   NODE_ENV: Joi.string()
