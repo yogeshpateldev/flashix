@@ -164,18 +164,20 @@ const FileDetails = () => {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
-            {/* Download button — links directly to the backend download endpoint */}
-            {!file.isExpired && (
-              <a
-                href={`${API_BASE}/files/${file.id}/download`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
-              >
-                <Download className="h-4 w-4" />
-                Download
-              </a>
-            )}
+            {/* Download button — always visible; backend rejects if expired/limit-reached */}
+            <a
+              href={`${API_BASE}/files/${file.id}/download`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity ${file.isExpired
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-50 pointer-events-none"
+                  : "bg-primary text-primary-foreground hover:opacity-90"
+                }`}
+              title={file.isExpired ? "File has expired" : "Download file"}
+            >
+              <Download className="h-4 w-4" />
+              Download
+            </a>
             <button
               onClick={() => setShowQR(!showQR)}
               className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground hover:bg-primary/10 hover:text-primary transition-colors"

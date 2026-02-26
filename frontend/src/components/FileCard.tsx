@@ -4,6 +4,8 @@ import type { UploadedFile } from "@/services/api";
 import ExpiryCountdown from "./ExpiryCountdown";
 import CopyLinkButton from "./CopyLinkButton";
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+
 const getFileIcon = (type: string) => {
   if (type.startsWith("image/")) return Image;
   if (type.startsWith("video/")) return Video;
@@ -33,9 +35,8 @@ const FileCard = ({ file }: { file: UploadedFile }) => {
   return (
     <Link
       to={`/file/${file.id}`}
-      className={`group glass rounded-xl p-4 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 ${
-        file.isExpired ? "opacity-60" : ""
-      }`}
+      className={`group glass rounded-xl p-4 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 ${file.isExpired ? "opacity-60" : ""
+        }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -69,12 +70,31 @@ const FileCard = ({ file }: { file: UploadedFile }) => {
       <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-3">
         <ExpiryCountdown expiresAt={file.expiresAt} isExpired={file.isExpired} />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Download count */}
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <Download className="h-3 w-3" />
             {file.downloads}
             {file.downloadLimit && `/${file.downloadLimit}`}
           </span>
+
+          {/* Download button — stops propagation so the card link doesn't fire */}
+          {!file.isExpired && (
+            <div onClick={(e) => e.preventDefault()}>
+              <a
+                href={`${API_BASE}/files/${file.id}/download`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary hover:bg-primary/20 transition-colors"
+                title="Download file"
+              >
+                <Download className="h-3 w-3" />
+                Download
+              </a>
+            </div>
+          )}
+
           <div onClick={(e) => e.preventDefault()}>
             <CopyLinkButton url={file.url} />
           </div>
