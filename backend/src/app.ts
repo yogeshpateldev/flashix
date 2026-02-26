@@ -38,7 +38,10 @@ class App {
   }
 
   private initializeMiddlewares(): void {
-    this.app.set('trust proxy', config.headers.trustProxy);
+    // Use number instead of boolean true — express-rate-limit v7 throws
+    // ERR_ERL_PERMISSIVE_TRUST_PROXY when trust proxy is set to true.
+    // 1 = trust exactly 1 proxy hop (Render / Railway / Vercel edge).
+    this.app.set('trust proxy', config.headers.trustProxy ? 1 : false);
 
     this.app.use(helmet({
       contentSecurityPolicy: {
