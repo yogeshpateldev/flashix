@@ -10,6 +10,13 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
   
+  // Override environment variables for testing
+  process.env.MONGO_URI = mongoUri;
+  process.env.REDIS_URL = 'redis://localhost:6379';
+  process.env.JWT_SECRET = 'test_jwt_secret_minimum_32_characters';
+  process.env.JWT_REFRESH_SECRET = 'test_refresh_secret_minimum_32_characters';
+  process.env.SESSION_SECRET = 'test_session_secret_minimum_32_characters';
+  
   // Connect to test database
   await mongoose.connect(mongoUri);
 
@@ -23,6 +30,22 @@ beforeAll(async () => {
   } catch (error) {
     console.warn('Redis not available for tests, some features may be limited');
   }
+
+  // Mock Cloudinary for all tests
+  const cloudinary = require('cloudinary').v2;
+  
+  cloudinary.uploader.upload = jest.fn().mockResolvedValue({
+    public_id: 'test/test-file-123',
+    secure_url: 'https://cloudinary.com/test/test-file-123',
+    bytes: 1024,
+    format: 'txt',
+  });
+
+  cloudinary.uploader.destroy = jest.fn().mockResolvedValue({
+    result: 'ok',
+  });
+
+  cloudinary.url = jest.fn().mockReturnValue('https://cloudinary.com/test/test-file-123');
 });
 
 afterAll(async () => {
@@ -43,10 +66,16 @@ afterAll(async () => {
 
 afterEach(async () => {
   // Clean up collections after each test
-  const collections = mongoose.connection.collections;
-  for (const key in collections) {
-    const collection = collections[key];
-    await collection.deleteMany({});
+  if (mongoose.connection.readyState === 1) { // Connected
+    const collections = mongoose.connection.collections;
+    for (const key in collections) {
+      const collection = collections[key];
+      try {
+        await collection.deleteMany({});
+      } catch (error) {
+        console.warn(`Failed to clean up collection ${key}:`, error);
+      }
+    }
   }
 
   // Clean up Redis data if available

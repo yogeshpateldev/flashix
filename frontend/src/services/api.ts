@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1";
+const FRONTEND_BASE = import.meta.env.VITE_FRONTEND_URL || window.location.origin;
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -94,8 +95,8 @@ export const fileService = {
         size: file.size,
         type: file.mimeType,
         // Point to the frontend file details page, not the backend download endpoint
-        url: `${window.location.origin}/file/${file.fileId}`,
-        shortUrl: `flashix.app/f/${file.fileId}`,
+        url: `${FRONTEND_BASE}/file/${file.fileId}`,
+        shortUrl: `${FRONTEND_BASE.replace(/https?:\/\//, '')}/f/${file.fileId}`,
         expiration: '24h', // Default, calculate from expiresAt if needed
         expiresAt: file.expiresAt,
         visibility: file.visibility as UploadedFile['visibility'],
@@ -122,8 +123,8 @@ export const fileService = {
         size: file.size,
         type: file.mimeType,
         // Point to the frontend file details page
-        url: `${window.location.origin}/file/${file.fileId}`,
-        shortUrl: `flashix.app/f/${file.fileId}`,
+        url: `${FRONTEND_BASE}/file/${file.fileId}`,
+        shortUrl: `${FRONTEND_BASE.replace(/https?:\/\//, '')}/f/${file.fileId}`,
         expiration: '24h',
         expiresAt: file.expiresAt,
         visibility: file.visibility as UploadedFile['visibility'],
@@ -166,8 +167,8 @@ export const fileService = {
       size: fileData.size,
       type: fileData.mimeType,
       // Point to the frontend file details page
-      url: `${window.location.origin}/file/${fileData.fileId}`,
-      shortUrl: `flashix.app/f/${fileData.fileId}`,
+      url: `${FRONTEND_BASE}/file/${fileData.fileId}`,
+      shortUrl: `${FRONTEND_BASE.replace(/https?:\/\//, '')}/f/${fileData.fileId}`,
       expiration: payload.expiration,
       expiresAt: fileData.expiresAt,
       visibility: fileData.visibility as UploadedFile['visibility'],
@@ -210,7 +211,7 @@ export const authService = {
         accessToken: string;
         refreshToken: string;
       };
-    }>("/auth/register", { email, password });
+    }>("/auth/register", { name, email, password });
     return {
       token: res.data.data.accessToken,
       user: {
@@ -245,8 +246,8 @@ export const publicService = {
         size: file.size,
         type: file.mimeType,
         // Point to the frontend file details page
-        url: `${window.location.origin}/file/${file.fileId}`,
-        shortUrl: `flashix.app/f/${file.fileId}`,
+        url: `${FRONTEND_BASE}/file/${file.fileId}`,
+        shortUrl: `${FRONTEND_BASE.replace(/https?:\/\//, '')}/f/${file.fileId}`,
         expiration: '24h',
         expiresAt: file.expiresAt,
         visibility: file.visibility as UploadedFile['visibility'],

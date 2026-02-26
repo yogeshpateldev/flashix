@@ -1,18 +1,12 @@
 import request from 'supertest';
-import { App } from '@/app';
+import App from '@/app';
 import { User } from '@/models';
-import config from '@/config';
 
 describe('Authentication Endpoints', () => {
   let app: App;
 
   beforeAll(async () => {
     app = new App();
-    await app.connectDatabase();
-  });
-
-  afterAll(async () => {
-    await app.disconnectDatabase();
   });
 
   beforeEach(async () => {
@@ -41,7 +35,7 @@ describe('Authentication Endpoints', () => {
       // Verify user was created in database
       const user = await User.findOne({ email: userData.email });
       expect(user).toBeTruthy();
-      expect(user.email).toBe(userData.email);
+      expect(user?.email).toBe(userData.email);
     });
 
     it('should return error for duplicate email', async () => {
