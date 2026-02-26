@@ -116,7 +116,17 @@ export const schemas = {
   pagination: Joi.object({
     page: Joi.number().integer().min(1).default(1),
     limit: Joi.number().integer().min(1).max(100).default(20),
-    sort: Joi.string().valid('createdAt', '-createdAt', 'size', '-size', 'downloadCount', '-downloadCount', 'expiresAt', '-expiresAt').default('-createdAt'),
+    // Accept both raw mongo field names AND frontend-friendly aliases
+    sort: Joi.string().valid(
+      'createdAt', '-createdAt',
+      'size', '-size',
+      'downloadCount', '-downloadCount',
+      'expiresAt', '-expiresAt',
+      'date', '-date',           // frontend alias for createdAt
+      'name', '-name',           // frontend alias for originalName
+      'expiry', '-expiry',       // frontend alias for expiresAt
+      'downloads', '-downloads', // frontend alias for downloadCount
+    ).default('-createdAt'),
     search: Joi.string().max(100).optional(),
   }),
 

@@ -380,21 +380,26 @@ export class FileService {
       query.originalName = { $regex: search, $options: 'i' };
     }
 
-    // Sort options
-    let sortOptions: any = {};
-    switch (sort) {
-      case 'name':
-        sortOptions = { originalName: 1 };
-        break;
-      case 'expiry':
-        sortOptions = { expiresAt: 1 };
-        break;
-      case 'downloads':
-        sortOptions = { downloadCount: -1 };
-        break;
-      default:
-        sortOptions = { createdAt: -1 };
-    }
+    // Sort options — support both frontend aliases and raw mongo field names
+    const sortAliasMap: Record<string, any> = {
+      'date': { createdAt: -1 },
+      '-date': { createdAt: 1 },
+      'name': { originalName: 1 },
+      '-name': { originalName: -1 },
+      'expiry': { expiresAt: 1 },
+      '-expiry': { expiresAt: -1 },
+      'downloads': { downloadCount: -1 },
+      '-downloads': { downloadCount: 1 },
+      'createdAt': { createdAt: 1 },
+      '-createdAt': { createdAt: -1 },
+      'size': { size: 1 },
+      '-size': { size: -1 },
+      'downloadCount': { downloadCount: 1 },
+      '-downloadCount': { downloadCount: -1 },
+      'expiresAt': { expiresAt: 1 },
+      '-expiresAt': { expiresAt: -1 },
+    };
+    let sortOptions: any = sortAliasMap[sort] ?? { createdAt: -1 };
 
     const [files, total] = await Promise.all([
       File.find(query)
