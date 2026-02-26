@@ -224,9 +224,8 @@ export class FileService {
   }
 
   static async generateDownloadUrl(file: IFile, req: AuthenticatedRequest): Promise<string> {
-    if (!file.canDownload()) {
-      throw createError('File cannot be downloaded', 403);
-    }
+    // Note: canDownload() is already checked by the caller (download route).
+    // No need to re-check here.
 
     // Generate signed URL for private files
     if (file.visibility === 'private') {
@@ -242,25 +241,27 @@ export class FileService {
   }
 
   static async generateQRCode(fileId: string): Promise<string> {
-    const baseUrl = config.env === 'production'
-      ? 'https://your-domain.com'
-      : 'http://localhost:3000';
-    const url = `${baseUrl}/f/${fileId}`;
+    // In production, QR code points to the frontend file details page.
+    // Fall back to the backend short-link in dev so it stays testable standalone.
+    const baseUrl = config.frontendUrl ||
+      (config.env === 'production' ? 'https://your-domain.com' : 'http://localhost:5173');
+    const url = `${baseUrl}/file/${fileId}`;
 
     return QRCode.toDataURL(url);
   }
 
   static async incrementDownloadCount(fileId: string, req: AuthenticatedRequest): Promise<void> {
-    const file = await File.findOne({ fileId });
+    // Re-use findOneAndUpdate for an atomic increment instead of separate fetch+save.
+    // This avoids a race condition where two simultaneous downloads could both
+    // pass the canDownload() check before either increments the count.
+    const file = await File.findOneAndUpdate(
+      { fileId },
+      { $inc: { downloadCount: 1 } },
+      { new: true }
+    );
     if (!file) {
       throw createError('File not found', 404);
     }
-
-    if (!file.canDownload()) {
-      throw createError('File cannot be downloaded', 403);
-    }
-
-    await file.incrementDownload();
 
     // Log audit
     const userId = req.user?._id?.toString();

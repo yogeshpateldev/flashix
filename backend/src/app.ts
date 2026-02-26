@@ -95,11 +95,22 @@ class App {
     this.app.use('/api/v1/admin', adminRoutes);
     this.app.use('/metrics', metricsRoutes);
 
-    // Short link redirect
+    // Short link redirect → frontend file details page
+    // When FRONTEND_URL is set (production), send the browser to the React app.
+    // In dev (no FRONTEND_URL) fall back to the raw download endpoint so the
+    // backend can still be tested standalone.
     this.app.get('/f/:fileId', (req: Request, res: Response, next: NextFunction) => {
       try {
         const { fileId } = req.params;
-        res.redirect(`/api/v1/files/${fileId}/download`);
+        const frontendUrl = config.frontendUrl;
+
+        if (frontendUrl) {
+          // Redirect to the React file details page
+          res.redirect(`${frontendUrl}/file/${fileId}`);
+        } else {
+          // Dev fallback: trigger the download directly
+          res.redirect(`/api/v1/files/${fileId}/download`);
+        }
       } catch (error) {
         next(error);
       }

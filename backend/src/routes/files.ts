@@ -26,7 +26,7 @@ const upload = multer({
 });
 
 // Upload file (authenticated or anonymous)
-router.post('/upload', 
+router.post('/upload',
   upload.single('file'),
   validate(schemas.fileUpload),
   optionalAuth,
@@ -79,7 +79,9 @@ router.post('/upload',
         },
         downloadUrl: `/api/v1/files/${file.fileId}/download`,
         qrCode,
-        shortLink: `${req.protocol}://${req.get('host')}/f/${file.fileId}`,
+        shortLink: config.frontendUrl
+          ? `${config.frontendUrl}/file/${file.fileId}`
+          : `${req.protocol}://${req.get('host')}/f/${file.fileId}`,
       },
       meta: {
         timestamp: new Date().toISOString(),
@@ -131,7 +133,7 @@ router.get('/:fileId',
   optionalSessionAuth,
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { fileId } = req.params;
-    
+
     const file = await FileService.getFile(fileId);
     if (!file) {
       throw createError('File not found', 404);
@@ -191,15 +193,21 @@ router.get('/:fileId/download',
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { fileId } = req.params;
     const { password, accessCode } = req.query as any;
-    
+
     const file = await FileService.getFile(fileId, true); // Include password hash
     if (!file) {
       throw createError('File not found', 404);
     }
 
-    // Check if file can be downloaded
-    if (!file.canDownload()) {
-      throw createError('File cannot be downloaded', 403);
+    // Check specific reasons the file cannot be downloaded
+    if (file.isExpired()) {
+      throw createError('This file has expired and is no longer available', 410);
+    }
+    if (file.maxDownloads && file.downloadCount >= file.maxDownloads) {
+      throw createError('This file has reached its maximum download limit', 410);
+    }
+    if (file.meta.virusScanStatus === 'infected') {
+      throw createError('This file has been flagged and cannot be downloaded', 403);
     }
 
     // Check password protection
@@ -207,7 +215,7 @@ router.get('/:fileId/download',
       if (!password) {
         throw createError('Password required', 401);
       }
-      
+
       const bcrypt = require('bcryptjs');
       const isPasswordValid = await bcrypt.compare(password, file.passwordHash);
       if (!isPasswordValid) {
@@ -367,7 +375,7 @@ router.get('/:fileId/qrcode',
     // Remove data URL prefix and send as base64
     const base64Data = qrCode.replace(/^data:image\/png;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
-    
+
     res.type('image/png');
     res.send(buffer);
   })

@@ -63,6 +63,9 @@ const envSchema = Joi.object({
   // Security Headers
   TRUST_PROXY: Joi.boolean().default(true),
   FORCE_HTTPS: Joi.boolean().default(false),
+
+  // Frontend URL (used for short-link and QR code generation)
+  FRONTEND_URL: Joi.string().uri().optional().allow(''),
 }).unknown(true);
 
 const { value: envVars, error } = envSchema.validate(process.env);
@@ -139,6 +142,10 @@ export const config = {
     trustProxy: envVars.TRUST_PROXY,
     forceHttps: envVars.FORCE_HTTPS,
   },
+
+  // URL of the hosted frontend (e.g. https://flashix.vercel.app)
+  // Falls back to the API server root when not set.
+  frontendUrl: (envVars.FRONTEND_URL as string | undefined) || '',
 };
 
 export default config;

@@ -12,16 +12,16 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("flashix_token");
   const sessionId = localStorage.getItem("flashix_session_id");
-  
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   // Always attach session ID for anonymous requests
   if (!token && sessionId) {
     config.headers['X-Session-ID'] = sessionId;
   }
-  
+
   return config;
 });
 
@@ -31,7 +31,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const token = localStorage.getItem("flashix_token");
-      
+
       // Only redirect to login if user was authenticated
       if (token) {
         localStorage.removeItem("flashix_token");
@@ -87,17 +87,18 @@ export const fileService = {
     try {
       const response = await api.get('/files');
       const files = response.data.data.files;
-      
+
       return files.map((file: ApiFileResponse) => ({
         id: file.fileId,
         name: file.originalName,
         size: file.size,
         type: file.mimeType,
-        url: `${API_BASE.replace('/api/v1', '')}/f/${file.fileId}`,
+        // Point to the frontend file details page, not the backend download endpoint
+        url: `${window.location.origin}/file/${file.fileId}`,
         shortUrl: `flashix.app/f/${file.fileId}`,
         expiration: '24h', // Default, calculate from expiresAt if needed
         expiresAt: file.expiresAt,
-        visibility: file.visibility,
+        visibility: file.visibility as UploadedFile['visibility'],
         downloads: file.downloadCount,
         downloadLimit: file.maxDownloads || null,
         createdAt: file.createdAt,
@@ -112,19 +113,20 @@ export const fileService = {
   getFile: async (id: string): Promise<UploadedFile | undefined> => {
     try {
       const response = await api.get(`/files/${id}`);
-      
+
       const file = response.data.data.file;
-      
+
       return {
         id: file.fileId,
         name: file.originalName,
         size: file.size,
         type: file.mimeType,
-        url: `${API_BASE.replace('/api/v1', '')}/f/${file.fileId}`,
+        // Point to the frontend file details page
+        url: `${window.location.origin}/file/${file.fileId}`,
         shortUrl: `flashix.app/f/${file.fileId}`,
         expiration: '24h',
         expiresAt: file.expiresAt,
-        visibility: file.visibility,
+        visibility: file.visibility as UploadedFile['visibility'],
         downloads: file.downloadCount,
         downloadLimit: file.maxDownloads || null,
         createdAt: file.createdAt,
@@ -141,11 +143,11 @@ export const fileService = {
     formData.append('file', payload.file);
     formData.append('visibility', payload.visibility);
     formData.append('expiryHours', String(payload.expiresInMinutes / 60));
-    
+
     if (payload.password) {
       formData.append('password', payload.password);
     }
-    
+
     if (payload.downloadLimit) {
       formData.append('maxDownloads', String(payload.downloadLimit));
     }
@@ -157,17 +159,18 @@ export const fileService = {
     });
 
     const fileData = response.data.data.file;
-    
+
     return {
       id: fileData.fileId,
       name: fileData.originalName,
       size: fileData.size,
       type: fileData.mimeType,
-      url: `${API_BASE.replace('/api/v1', '')}/f/${fileData.fileId}`,
+      // Point to the frontend file details page
+      url: `${window.location.origin}/file/${fileData.fileId}`,
       shortUrl: `flashix.app/f/${fileData.fileId}`,
       expiration: payload.expiration,
       expiresAt: fileData.expiresAt,
-      visibility: fileData.visibility,
+      visibility: fileData.visibility as UploadedFile['visibility'],
       downloads: fileData.downloadCount,
       downloadLimit: fileData.maxDownloads || null,
       createdAt: fileData.createdAt,
@@ -191,11 +194,11 @@ export const authService = {
     }>("/auth/login", { email, password });
     return {
       token: res.data.data.accessToken,
-      user: { 
-        id: res.data.data.user.id, 
-        email: res.data.data.user.email, 
-        name: email.split("@")[0], 
-        role: res.data.data.user.role 
+      user: {
+        id: res.data.data.user.id,
+        email: res.data.data.user.email,
+        name: email.split("@")[0],
+        role: res.data.data.user.role
       },
     };
   },
@@ -210,11 +213,11 @@ export const authService = {
     }>("/auth/register", { email, password });
     return {
       token: res.data.data.accessToken,
-      user: { 
-        id: res.data.data.user.id, 
-        email: res.data.data.user.email, 
-        name, 
-        role: res.data.data.user.role 
+      user: {
+        id: res.data.data.user.id,
+        email: res.data.data.user.email,
+        name,
+        role: res.data.data.user.role
       },
     };
   },
@@ -235,17 +238,18 @@ export const publicService = {
       if (options.search) params.append('search', options.search);
 
       const response = await api.get(`/files/public?${params.toString()}`);
-      
+
       const files = response.data.data.files.map((file: any) => ({
         id: file.fileId,
         name: file.originalName,
         size: file.size,
         type: file.mimeType,
-        url: `${API_BASE.replace('/api/v1', '')}/f/${file.fileId}`,
+        // Point to the frontend file details page
+        url: `${window.location.origin}/file/${file.fileId}`,
         shortUrl: `flashix.app/f/${file.fileId}`,
-        expiration: '24h', // Default, calculate from expiresAt if needed
+        expiration: '24h',
         expiresAt: file.expiresAt,
-        visibility: file.visibility,
+        visibility: file.visibility as UploadedFile['visibility'],
         downloads: file.downloadCount,
         downloadLimit: file.maxDownloads || null,
         createdAt: file.createdAt,

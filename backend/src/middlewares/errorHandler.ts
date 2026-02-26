@@ -19,8 +19,15 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ): void => {
-  let err = { ...error };
+  // IMPORTANT: Error objects have non-enumerable properties (message, name,
+  // stack, and our custom statusCode / isOperational). Object-spread loses them.
+  // Copy explicitly instead.
+  let err: AppError = Object.assign(Object.create(Object.getPrototypeOf(error)), error);
   err.message = error.message;
+  err.name = error.name;
+  err.stack = error.stack;
+  err.statusCode = error.statusCode;
+  err.isOperational = error.isOperational;
 
   logger.error('Error occurred:', {
     error: err,
@@ -122,6 +129,21 @@ export const createError = (message: string, statusCode: number = 500): AppError
   const error = new Error(message) as AppError;
   error.statusCode = statusCode;
   error.isOperational = true;
+
+  // Give the error a descriptive name so the `code` field in API responses is human-readable
+  const nameMap: Record<number, string> = {
+    400: 'BadRequest',
+    401: 'Unauthorized',
+    403: 'Forbidden',
+    404: 'NotFound',
+    409: 'Conflict',
+    410: 'Gone',
+    422: 'UnprocessableEntity',
+    429: 'TooManyRequests',
+    500: 'InternalServerError',
+  };
+  error.name = nameMap[statusCode] || 'AppError';
+
   return error;
 };
 

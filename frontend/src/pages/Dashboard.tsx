@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Search, Upload, Filter, BarChart2, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSessionContext } from "@/contexts/SessionContext";
@@ -13,6 +13,7 @@ type FilterKey = "all" | "active" | "expired";
 const Dashboard = () => {
   const { isAuthenticated } = useAuth();
   const { sessionFiles, isSessionExpired, resetSession } = useSessionContext();
+  const location = useLocation();
 
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,12 +21,12 @@ const Dashboard = () => {
   const [sort, setSort] = useState<SortKey>("date");
   const [filter, setFilter] = useState<FilterKey>("all");
 
-  useEffect(() => {
+  const fetchFiles = useCallback(() => {
     if (!isAuthenticated) {
       setLoading(false);
       return;
     }
-
+    setLoading(true);
     fileService
       .getFiles()
       .then((data) => {
@@ -36,6 +37,12 @@ const Dashboard = () => {
       })
       .finally(() => setLoading(false));
   }, [isAuthenticated]);
+
+  // Re-fetch whenever we land on the dashboard (covers post-delete navigation)
+  useEffect(() => {
+    fetchFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, location.key]);
 
   const filteredFiles = useMemo(() => {
     const source = isAuthenticated ? files : sessionFiles;
@@ -97,13 +104,26 @@ const Dashboard = () => {
               {activeCount} active · {expiredCount} expired · {totalDownloads} downloads
             </p>
           </div>
-          <Link
-            to="/upload"
-            className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 glow"
-          >
-            <Upload className="h-4 w-4" />
-            Upload File
-          </Link>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={fetchFiles}
+                disabled={loading}
+                className="flex items-center gap-2 rounded-xl border border-border bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground transition-all hover:bg-secondary/80 disabled:opacity-50"
+                title="Refresh file list"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+                Refresh
+              </button>
+            )}
+            <Link
+              to="/upload"
+              className="flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 glow"
+            >
+              <Upload className="h-4 w-4" />
+              Upload File
+            </Link>
+          </div>
         </div>
 
         {/* Analytics (logged in) */}
@@ -148,11 +168,10 @@ const Dashboard = () => {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all ${
-                    filter === f
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
+                  className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-all ${filter === f
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
                 >
                   <Filter className="mr-1 inline-block h-3 w-3" />
                   {f}
@@ -189,8 +208,8 @@ const Dashboard = () => {
               {search
                 ? "Try a different search term"
                 : isAuthenticated
-                ? "Upload your first file to get started"
-                : "Files uploaded in this session will appear here"}
+                  ? "Upload your first file to get started"
+                  : "Files uploaded in this session will appear here"}
             </p>
           </div>
         ) : (
