@@ -50,12 +50,49 @@ const FileDetails = () => {
 
   const handleDelete = async () => {
     if (!file) return;
+    
+    // Confirm deletion
+    const confirmed = window.confirm(`Are you sure you want to delete "${file.name}"? This action cannot be undone.`);
+    if (!confirmed) return;
+    
     try {
       await fileService.deleteFile(file.id);
-      toast({ title: "File deleted", description: `${file.name} has been removed.` });
+      toast({ 
+        title: "File deleted successfully", 
+        description: `${file.name} has been removed from cloud storage.` 
+      });
       navigate("/dashboard");
-    } catch {
-      toast({ title: "Error", description: "Could not delete file.", variant: "destructive" });
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      
+      // Provide specific error messages based on the error
+      let errorMessage = "Could not delete file.";
+      let errorDescription = "Please try again later.";
+      
+      if (error.response?.status === 404) {
+        errorMessage = "File not found";
+        errorDescription = "The file may have already been deleted or expired.";
+      } else if (error.response?.status === 403) {
+        errorMessage = "Access denied";
+        errorDescription = "You don't have permission to delete this file.";
+      } else if (error.response?.status === 500) {
+        if (error.response?.data?.message?.includes('cloud storage')) {
+          errorMessage = "Cloud storage error";
+          errorDescription = "Failed to delete file from cloud storage. Please contact support.";
+        } else {
+          errorMessage = "Server error";
+          errorDescription = "A server error occurred. Please try again later.";
+        }
+      } else if (error.message?.includes('cloud storage')) {
+        errorMessage = "Cloud storage error";
+        errorDescription = "Failed to delete file from cloud storage.";
+      }
+      
+      toast({ 
+        title: errorMessage, 
+        description: errorDescription,
+        variant: "destructive" 
+      });
     }
   };
 

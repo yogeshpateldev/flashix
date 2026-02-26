@@ -200,19 +200,45 @@ export class FileService {
     // Verify ownership
     this.verifyOwnership(file, owner);
 
-    // Delete from Cloudinary
+    // Delete from Cloudinary first - if this fails, don't delete from database
     try {
-      await cloudinary.uploader.destroy(file.cloudinaryPublicId);
+      const result = await cloudinary.uploader.destroy(file.cloudinaryPublicId);
+      
+      // Check if Cloudinary deletion was successful
+      if (result.result !== 'ok' && result.result !== 'not found') {
+        logger.error('Cloudinary deletion failed', {
+          fileId,
+          cloudinaryPublicId: file.cloudinaryPublicId,
+          result,
+        });
+        throw createError('Failed to delete file from cloud storage', 500);
+      }
+      
+      logger.info('File deleted from Cloudinary', {
+        fileId,
+        cloudinaryPublicId: file.cloudinaryPublicId,
+        result: result.result,
+      });
     } catch (error) {
       logger.error('Failed to delete file from Cloudinary', {
         fileId,
         cloudinaryPublicId: file.cloudinaryPublicId,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
+      throw createError('Failed to delete file from cloud storage', 500);
     }
 
-    // Delete from database
-    await File.deleteOne({ fileId });
+    // Only delete from database if Cloudinary deletion succeeded
+    try {
+      await File.deleteOne({ fileId });
+      logger.info('File deleted from database', { fileId });
+    } catch (error) {
+      logger.error('Failed to delete file from database', {
+        fileId,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw createError('Failed to delete file record', 500);
+    }
 
     // Log audit
     await this.logAudit('delete', file._id, owner.userId, owner.sessionId);

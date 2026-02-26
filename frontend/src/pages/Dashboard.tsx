@@ -44,6 +44,19 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, location.key]);
 
+  // Also listen for navigation events to refresh after deletion
+  useEffect(() => {
+    const handleNavigation = () => {
+      // Check if we're coming back from file details (potential deletion)
+      if (location.key && document.referrer.includes('/file/')) {
+        fetchFiles();
+      }
+    };
+
+    handleNavigation();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.key]);
+
   const filteredFiles = useMemo(() => {
     const source = isAuthenticated ? files : sessionFiles;
 
