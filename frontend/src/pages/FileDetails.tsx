@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import {
   FileText, Download, Clock, Eye, Globe, Lock, Trash2, ArrowLeft, Share2, Key,
@@ -28,6 +28,7 @@ const visibilityConfig = {
 const FileDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
@@ -62,7 +63,8 @@ const FileDetails = () => {
         title: "File deleted successfully", 
         description: `${file.name} has been removed from cloud storage.` 
       });
-      navigate("/dashboard");
+      // Navigate with state to trigger refresh
+      navigate("/dashboard", { state: { refresh: true, deletedFileId: file.id } });
     } catch (error: any) {
       console.error('Delete error:', error);
       

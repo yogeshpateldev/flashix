@@ -44,18 +44,26 @@ const Dashboard = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, location.key]);
 
-  // Also listen for navigation events to refresh after deletion
+  // Check if we're coming from a deletion and refresh files
   useEffect(() => {
-    const handleNavigation = () => {
-      // Check if we're coming back from file details (potential deletion)
-      if (location.key && document.referrer.includes('/file/')) {
+    if (location.state?.refresh) {
+      fetchFiles();
+      // Clear the state to avoid infinite refreshes
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state, fetchFiles]);
+
+  // Refresh when window gains focus (user returns from file details)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isAuthenticated) {
         fetchFiles();
       }
     };
 
-    handleNavigation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.key]);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isAuthenticated, fetchFiles]);
 
   const filteredFiles = useMemo(() => {
     const source = isAuthenticated ? files : sessionFiles;
