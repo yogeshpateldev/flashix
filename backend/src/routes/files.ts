@@ -153,6 +153,9 @@ router.get('/:fileId',
         throw createError('Access denied', 403);
       }
     }
+    
+    // For password-protected files, allow basic metadata viewing
+    // Password is only required for download
 
     const response: ApiResponse = {
       success: true,

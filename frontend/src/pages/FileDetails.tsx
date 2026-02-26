@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  FileText, Download, Clock, Eye, Globe, Lock, Trash2, ArrowLeft, Share2,
+  FileText, Download, Clock, Eye, Globe, Lock, Trash2, ArrowLeft, Share2, Key,
 } from "lucide-react";
 import { fileService, type UploadedFile } from "@/services/api";
 import Layout from "@/components/Layout";
@@ -31,6 +31,7 @@ const FileDetails = () => {
   const [file, setFile] = useState<UploadedFile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     if (id) {
@@ -201,16 +202,35 @@ const FileDetails = () => {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">
+            {/* Password input for protected files */}
+            {file.visibility === 'password' && (
+              <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2 flex-1 min-w-0">
+                <Key className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password to download"
+                  className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+                />
+              </div>
+            )}
+            
             {/* Download button — always visible; backend rejects if expired/limit-reached */}
             <a
-              href={`${API_BASE}/files/${file.id}/download`}
+              href={file.visibility === 'password' && password 
+                ? `${API_BASE}/files/${file.id}/download?password=${encodeURIComponent(password)}`
+                : `${API_BASE}/files/${file.id}/download`
+              }
               target="_blank"
               rel="noopener noreferrer"
               className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity ${file.isExpired
                   ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-50 pointer-events-none"
+                  : file.visibility === 'password' && !password
+                  ? "bg-secondary text-muted-foreground cursor-not-allowed opacity-50 pointer-events-none"
                   : "bg-primary text-primary-foreground hover:opacity-90"
                 }`}
-              title={file.isExpired ? "File has expired" : "Download file"}
+              title={file.isExpired ? "File has expired" : file.visibility === 'password' && !password ? "Enter password to download" : "Download file"}
             >
               <Download className="h-4 w-4" />
               Download
