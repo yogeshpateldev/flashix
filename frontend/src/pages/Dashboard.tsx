@@ -30,6 +30,7 @@ const Dashboard = () => {
     fileService
       .getFiles()
       .then((data) => {
+        console.log('Dashboard: Fetched files:', data);
         setFiles(data);
       })
       .catch((error) => {

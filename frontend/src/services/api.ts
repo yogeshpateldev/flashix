@@ -86,7 +86,10 @@ export interface UploadedFile {
 export const fileService = {
   getFiles: async (): Promise<UploadedFile[]> => {
     try {
-      const response = await api.get('/files');
+      const response = await api.get<{
+        data: { files: ApiFileResponse[] };
+      }>("/files");
+      console.log('API getFiles response:', response.data);
       const files = response.data.data.files;
 
       return files.map((file: ApiFileResponse) => ({
