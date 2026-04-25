@@ -32,6 +32,7 @@ export interface IFile extends Document {
   originalName: string;
   cloudinaryPublicId: string;
   cloudinaryUrl: string;
+  cloudinaryResourceType: 'image' | 'video' | 'raw';
   visibility: 'public' | 'private' | 'password';
   passwordHash?: string;
   maxDownloads?: number;

@@ -50,6 +50,7 @@ export class FileService {
       originalName: file.originalname,
       cloudinaryPublicId: uploadResult.public_id,
       cloudinaryUrl: uploadResult.secure_url,
+      cloudinaryResourceType: uploadResult.resource_type || 'raw',
       size: file.size,
       mimeType: file.mimetype,
       visibility: options.visibility || 'public',
@@ -258,7 +259,7 @@ export class FileService {
       const url = cloudinary.url(file.cloudinaryPublicId, {
         sign_url: true,
         expires_at: Math.floor(new Date().getTime() / 1000) + 3600, // 1 hour
-        resource_type: 'auto',
+        resource_type: file.cloudinaryResourceType || 'raw',
       });
       return url;
     }

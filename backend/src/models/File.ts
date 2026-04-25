@@ -41,6 +41,11 @@ const fileSchema = new Schema<IFile>({
     type: String,
     required: true,
   },
+  cloudinaryResourceType: {
+    type: String,
+    enum: ['image', 'video', 'raw'],
+    default: 'raw',
+  },
   visibility: {
     type: String,
     enum: ['public', 'private', 'password'],
