@@ -339,21 +339,18 @@ export class FileService {
 
   private static async uploadToCloudinary(file: MulterFile, visibility?: string): Promise<any> {
     const resourceType = this.getCloudinaryResourceType(file.mimetype);
+    const ext = path.extname(file.originalname);
+    const randomId = crypto.randomBytes(8).toString('hex');
+
     const uploadOptions: any = {
       resource_type: resourceType,
-      folder: 'drop24',
-      use_filename: true,
-      unique_filename: true,
+      // For raw files we must embed the extension in the public_id ourselves;
+      // for image/video Cloudinary handles it automatically.
+      public_id: resourceType === 'raw'
+        ? `drop24/file_${randomId}${ext}`
+        : `drop24/file_${randomId}`,
+      // Do NOT use use_filename — it would override public_id with the original name
     };
-
-    // For raw files, Cloudinary strips the extension from the public_id which
-    // causes 404s on delivery. Explicitly set public_id with the extension.
-    if (resourceType === 'raw') {
-      const ext = path.extname(file.originalname);
-      const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
-      uploadOptions.public_id = `drop24/${base}_${Date.now()}${ext}`;
-      delete uploadOptions.folder; // folder is embedded in public_id above
-    }
 
     if (visibility === 'private') {
       uploadOptions.type = 'private';
