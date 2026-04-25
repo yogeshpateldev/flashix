@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { Readable } from 'stream';
 import * as crypto from 'crypto';
+import * as path from 'path';
 import multer from 'multer';
 type MulterFile = Express.Multer.File;
 import QRCode from 'qrcode';
@@ -337,12 +338,22 @@ export class FileService {
   }
 
   private static async uploadToCloudinary(file: MulterFile, visibility?: string): Promise<any> {
+    const resourceType = this.getCloudinaryResourceType(file.mimetype);
     const uploadOptions: any = {
-      resource_type: this.getCloudinaryResourceType(file.mimetype),
+      resource_type: resourceType,
       folder: 'drop24',
       use_filename: true,
       unique_filename: true,
     };
+
+    // For raw files, Cloudinary strips the extension from the public_id which
+    // causes 404s on delivery. Explicitly set public_id with the extension.
+    if (resourceType === 'raw') {
+      const ext = path.extname(file.originalname);
+      const base = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+      uploadOptions.public_id = `drop24/${base}_${Date.now()}${ext}`;
+      delete uploadOptions.folder; // folder is embedded in public_id above
+    }
 
     if (visibility === 'private') {
       uploadOptions.type = 'private';
