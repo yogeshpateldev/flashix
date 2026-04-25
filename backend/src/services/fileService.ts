@@ -330,9 +330,15 @@ export class FileService {
     logger.debug('Virus scan completed', { filename: file.originalname, size: file.size });
   }
 
+  private static getCloudinaryResourceType(mimeType: string): 'image' | 'video' | 'raw' {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('video/') || mimeType.startsWith('audio/')) return 'video';
+    return 'raw';
+  }
+
   private static async uploadToCloudinary(file: MulterFile, visibility?: string): Promise<any> {
     const uploadOptions: any = {
-      resource_type: 'auto',
+      resource_type: this.getCloudinaryResourceType(file.mimetype),
       folder: 'drop24',
       use_filename: true,
       unique_filename: true,
