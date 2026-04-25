@@ -20,12 +20,14 @@ const gracefulShutdown = async (signal: string) => {
 
 const startServer = async () => {
   try {
-    await app.connectDatabase();
-    
+    // Bind the port FIRST so Render's port scanner sees it immediately,
+    // then connect to the database in the background.
     const server = app.getApp().listen(config.port, () => {
       logger.info(`Server running on port ${config.port} in ${config.env} mode`);
       logger.info(`Health check available at http://localhost:${config.port}/api/v1/health`);
     });
+
+    await app.connectDatabase();
 
     server.on('error', (error: NodeJS.ErrnoException) => {
       if (error.syscall !== 'listen') {

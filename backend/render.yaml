@@ -7,7 +7,7 @@ services:
     rootDir: .      # This file should be inside /backend
     buildCommand: npm ci && npm run build
     startCommand: node dist/server.js
-    healthCheckPath: /api/v1/health
+    healthCheckPath: /api/v1/health/live
     envVars:
       - key: NODE_ENV
         value: production
